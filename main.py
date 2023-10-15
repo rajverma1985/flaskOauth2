@@ -1,15 +1,18 @@
 from flask import Flask, redirect, current_user, current_app, url_for, session, abort, urlencode, secrets
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 app = Flask(__name__)
-
+SECRET_KEY = os.getenv("ENV_SECRET")
 # Google OAuth 2.0 documentation:
 # https://developers.google.com/identity/protocols/oauth2/web-server#httprest
 app.config['OAUTH2_IDP'] = {"google":
     {
-        "client_id": "796336461457-40a3ffvmju8i24m0ov9b4hs8m2k5bh4p.apps.googleusercontent.com",
+        "client_id": os.getenv("client_id"),
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
-        "client_secret": "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",
+        "client_secret": os.getenv("client_secret"),
         "redirect_uris": ["http://localhost:5000/callback/google"],
         "javascript_origins": ["http://localhost:5000"]},
         'userinfo': {
