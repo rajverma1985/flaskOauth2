@@ -1,7 +1,12 @@
 import os
-
-from flask import Flask, redirect, url_for, session, request
+from urllib.parse import urlencode
+from dotenv import load_dotenv
+from flask import Flask, redirect, url_for, session, render_template, flash
 from authlib.integrations.flask_client import OAuth
+from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
+import requests
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -9,58 +14,40 @@ app.secret_key = 'your_secret_key'
 oauth = OAuth()
 oauth.init_app(app)
 
-# Configuration for Google OAuth
-google = oauth.register(
-    name='google',
-    client_id=os.getenv('client_id'),
-    client_secret=os.getenv('client_secret'),
-    authorize_url=os.getenv('authorize_url'),
-    authorize_params=None,
-    access_token_url=os.getenv('access_token_url'),
-    access_token_params=None,
-    refresh_token_url=None,
-    redirect_uri='http://localhost:5000/callback',
-    client_kwargs={'scope': 'openid profile email'},
-)
+# Configuration for Oauth provider
+app.config['providers'] = {
+    'google': {'client_id': os.environ.get('client_id'),
+               'client_secret': os.environ.get('client_secret'),
+               'authorize_url': os.environ.get('authorize_url'),
+               'access_token_url': os.environ.get('access_token_url'),
+               'client_kwargs': {'scope': 'openid profile email'}
+               },
+    'test':{
+        'client_id': None
+    }
+}
 
-
-# Configuration for GitHub OAuth
-# github = oauth.register(
-#     name='github',
-#     client_id='YOUR_GITHUB_CLIENT_ID',
-#     client_secret='YOUR_GITHUB_CLIENT_SECRET',
-#     authorize_url='https://github.com/login/oauth/authorize',
-#     authorize_params=None,
-#     access_token_url='https://github.com/login/oauth/access_token',
-#     access_token_params=None,
-#     redirect_uri='http://localhost:8000/callback',
-#     client_kwargs={'scope': 'user:email'},
-# )
 
 @app.route('/')
-def welcome():
-    return "Welcome click this link to login <a href=login>LOGIN</a>"
+def index():
+    return render_template('index.html')
 
 
 @app.route('/login')
 def login():
-    return google.authorize_redirect()  # or github.authorize_redirect()
+    return 'test'
 
 
-@app.route('/callback')
+@app.route('/callback/<provider>')
 def callback():
-    token = google.authorize_access_token()  # or github.authorize_access_token()
-    user_info = google.parse_id_token(token)  # or github.get('user')
-
-    # Here, you have user information. You can now authenticate and authorize the user.
-
     return 'You are now logged in.'
 
 
 @app.route('/logout')
 def logout():
-    session.pop('user_info', None)  # Assuming you're using sessions
-    return redirect(url_for('login'))
+    # logout_user()
+    flash('You have been logged out.')
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
