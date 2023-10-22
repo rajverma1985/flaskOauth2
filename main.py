@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, redirect, url_for, session, request
 from authlib.integrations.flask_client import OAuth
 
@@ -10,14 +12,14 @@ oauth.init_app(app)
 # Configuration for Google OAuth
 google = oauth.register(
     name='google',
-    client_id='YOUR_GOOGLE_CLIENT_ID',
-    client_secret='YOUR_GOOGLE_CLIENT_SECRET',
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    client_id=os.getenv('client_id'),
+    client_secret=os.getenv('client_secret'),
+    authorize_url=os.getenv('authorize_url'),
     authorize_params=None,
-    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_url=os.getenv('access_token_url'),
     access_token_params=None,
     refresh_token_url=None,
-    redirect_uri='http://localhost:8000/callback',
+    redirect_uri='http://localhost:5000/callback',
     client_kwargs={'scope': 'openid profile email'},
 )
 
