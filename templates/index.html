@@ -19,17 +19,17 @@
           </div>
         {% endif %}
       {% endwith %}
-      {% if current_user.is_authenticated %}
-        <h2>Hi, {{ current_user.username }}!</h2>
+
+        <h2>Hi, Testing</h2>
         <p>
           <a class="btn btn-primary" href="{{ url_for('logout') }}">Logout</a>
         </p>
-      {% else %}
+
         <p>
-          <a class="btn btn-primary" href="{{ url_for('oauth2_authorize', provider='google') }}">Login with Google</a>
-          <a class="btn btn-primary" href="{{ url_for('oauth2_authorize', provider='github') }}">Login with GitHub</a>
+          <a class="btn btn-primary" href="{{ url_for('login', provider='google') }}">Login with Google</a>
+          <a class="btn btn-primary" href="{{ url_for('login', provider='github') }}">Login with GitHub</a>
         </p>
-      {% endif %}
+
     </div>
   </body>
 </html>
