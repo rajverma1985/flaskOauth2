@@ -1,58 +1,65 @@
-from flask import Flask, redirect, current_user, current_app, url_for, session, abort, urlencode, secrets
-from dotenv import load_dotenv
-import os
+from flask import Flask, redirect, url_for, session, request
+from authlib.integrations.flask_client import OAuth
 
-load_dotenv()
 app = Flask(__name__)
-SECRET_KEY = os.getenv("ENV_SECRET")
-# Google OAuth 2.0 documentation:
-# https://developers.google.com/identity/protocols/oauth2/web-server#httprest
-app.config['OAUTH2_IDP'] = {"google":
-    {
-        "client_id": os.getenv("client_id"),
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "client_secret": os.getenv("client_secret"),
-        "redirect_uris": ["http://localhost:5000/callback/google"],
-        "javascript_origins": ["http://localhost:5000"]},
-        'userinfo': {
-            'url': 'https://www.googleapis.com/oauth2/v3/userinfo',
-            'email': lambda json: json['email'],
-        },
-        'scopes': ['https://www.googleapis.com/auth/userinfo.email']
-}
+app.secret_key = 'your_secret_key'
 
+oauth = OAuth()
+oauth.init_app(app)
+
+# Configuration for Google OAuth
+google = oauth.register(
+    name='google',
+    client_id='YOUR_GOOGLE_CLIENT_ID',
+    client_secret='YOUR_GOOGLE_CLIENT_SECRET',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    authorize_params=None,
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_params=None,
+    refresh_token_url=None,
+    redirect_uri='http://localhost:8000/callback',
+    client_kwargs={'scope': 'openid profile email'},
+)
+
+
+# Configuration for GitHub OAuth
+# github = oauth.register(
+#     name='github',
+#     client_id='YOUR_GITHUB_CLIENT_ID',
+#     client_secret='YOUR_GITHUB_CLIENT_SECRET',
+#     authorize_url='https://github.com/login/oauth/authorize',
+#     authorize_params=None,
+#     access_token_url='https://github.com/login/oauth/access_token',
+#     access_token_params=None,
+#     redirect_uri='http://localhost:8000/callback',
+#     client_kwargs={'scope': 'user:email'},
+# )
 
 @app.route('/')
+def welcome():
+    return "Welcome click this link to login <a href=login>LOGIN</a>"
+
+
+@app.route('/login')
 def login():
-    return "Hello What's up?"
+    return google.authorize_redirect()  # or github.authorize_redirect()
 
 
-@app.route('/authorize/<idp>')
-def oauth2_authorize(idp):
-    if not current_user.is_anonymous:
-        return redirect(url_for('index'))
+@app.route('/callback')
+def callback():
+    token = google.authorize_access_token()  # or github.authorize_access_token()
+    user_info = google.parse_id_token(token)  # or github.get('user')
 
-    provider_data = current_app.config['OAUTH2_PROVIDERS'].get(idp)
-    if provider_data is None:
-        abort(404)
+    # Here, you have user information. You can now authenticate and authorize the user.
 
-    # generate a random string for the state parameter
-    session['oauth2_state'] = secrets.token_urlsafe(16)
-
-    # create a query string with all the OAuth2 parameters
-    qs = urlencode({
-        'client_id': provider_data['client_id'],
-        'redirect_uri': url_for('oauth2_callback', provider=idp,
-                                _external=True),
-        'response_type': 'code',
-        'scope': ' '.join(provider_data['scopes']),
-        'state': session['oauth2_state'],
-    })
-
-    # redirect the user to the OAuth2 provider authorization URL
-    return redirect(provider_data['authorize_url'] + '?' + qs)
+    return 'You are now logged in.'
 
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+@app.route('/logout')
+def logout():
+    session.pop('user_info', None)  # Assuming you're using sessions
+    return redirect(url_for('login'))
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
