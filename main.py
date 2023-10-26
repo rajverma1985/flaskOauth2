@@ -3,30 +3,27 @@ from urllib.parse import urlencode
 from dotenv import load_dotenv
 from flask import Flask, redirect, url_for, session, render_template, flash, current_app, abort, request
 from authlib.integrations.flask_client import OAuth
-# from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 import requests
 
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
-# login = LoginManager(app)
-# login.login_view = 'index'
+app.secret_key = os.environ.get('SECRET_KEY')
 
 oauth = OAuth()
 oauth.init_app(app)
 
 # Configuration for Oauth provider
 app.config['providers'] = {
-    'google': {'client_id': os.environ.get('client_id'),
-               'client_secret': os.environ.get('client_secret'),
-               'authorize_url': os.environ.get('authorize_url'),
-               'access_token_url': os.environ.get('access_token_url'),
+    'google': {'client_id': os.environ.get('CLIENT_ID'),
+               'client_secret': os.environ.get('CLIENT_SECRET'),
+               'authorize_url': os.environ.get('AUTHORIZE_URL'),
+               'access_token_url': os.environ.get('ACCESS_TOKEN_URL'),
                'client_kwargs': {'scope': 'openid profile email'},
-                'userinfo': {
-                            'url': 'https://www.googleapis.com/oauth2/v3/userinfo',
-                            'email': lambda json: json['email'],
-                            },
+               'userinfo': {
+                   'url': 'https://www.googleapis.com/oauth2/v3/userinfo',
+                   'email': lambda json: json['email'],
+               },
                'scopes': ['https://www.googleapis.com/auth/userinfo.email']
                },
     'test': {
