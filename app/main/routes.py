@@ -1,10 +1,6 @@
-import os
-
 from flask import redirect, url_for, session, render_template
-from app import oauth
 from app.main import bp
-
-CONF_URL = 'https://accounts.google.com/.well-known/openid-configuration'
+from app import oauth
 
 
 @bp.route('/')
